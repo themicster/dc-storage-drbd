@@ -6,6 +6,9 @@ const exec = require('child_process').exec;
 var privateKey = fs.readFileSync('/var/lib/node/drbd-motion.key').toString();
 var certificate = fs.readFileSync('/var/lib/node/drbd-motion.crt').toString();
 
+var primaryCmd = '/sbin/drbdadm primary nfs_data';
+var secondaryCmd = '/sbin/drbdadm secondary nfs_data';
+
 const options = {
   key: privateKey,
   cert: certificate
@@ -20,10 +23,26 @@ function handleRequest(request, response){
 
   console.log(now.toString() + ': Request for: ' + request.url + ', From: ' + request.connection.remoteAddress);
 
-  if(request.url == '/drbd-motion/$$token$$/primary')
+  // TODO: Make this secure by requiring a token
+  if(request.url == '/drbd-motion/primary') 
   {
-      response.end('OK');
-      console.log('Set server as primary');
+    exec(primaryCmd, function(error, stdout, stderr) {
+      console.log(error);
+      console.log(stdout);
+      console.log(stderr);
+    });
+    response.end('OK');
+    console.log('Set server as primary');
+  }
+  else if(request.url == '/drbd-motion/secondary') 
+  {
+    exec(secondaryCmd, function(error, stdout, stderr) {
+      console.log(error);
+      console.log(stdout);
+      console.log(stderr);
+    });
+    response.end('OK');
+    console.log('Set server as secondary');
   }
   else {
     response.end('Unknown request Path: ' + request.url + ', From: ' + request.connection.remoteAddress);
