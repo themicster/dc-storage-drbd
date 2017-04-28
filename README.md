@@ -3,6 +3,10 @@ Data Center Storage using DRBD to migrate disks around your cluster. I'm using t
 
 You'll need to update the .env files with your internal IPs and use them in the curl commands below instead of the ones shown here.
 
+This will create a 1GB file on the master and a 1GB ramdisk on the slave then it sets the slave to primary and you can mount it and read/write to it and all changes are saved in the file on the master. This is very basic at this point and not very useful yet. I plan to make it easier to use and make some scripts to do all the heavy lifting. At this point its a good proof of concept. I'm doing this on a set of CoreOS machines. Run the docker container from the directory with the .env files or update the --env-file= to point to them.
+
+Clone this repository on the two servers and build the container in the server directory by running ./build
+
 Both Master and Slave:
 ```
 sudo modprobe drbd
@@ -17,7 +21,7 @@ sudo dd if=/dev/zero of=/opt/dev0-backstore bs=1M count=1000
 
 sudo losetup /dev/fake-dev0 /opt/dev0-backstore
 sudo docker run --name drbd-motion -d --privileged --net=host --env-file=./server.env micster/drbd-motion-server
-mkfs -t ext4 /dev/drbd0
+curl -k https://10.1.2.7:8445/drbd-motion/initialize
 ```
 
 Master (if you've already run this as part of the initial setup, it's still running no need to run it again):

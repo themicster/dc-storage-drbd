@@ -8,6 +8,7 @@ var certificate = fs.readFileSync('/var/lib/node/drbd-motion.crt').toString();
 
 var primaryCmd = '/sbin/drbdadm primary nfs_data';
 var secondaryCmd = '/sbin/drbdadm secondary nfs_data';
+var initializeCmd = '/root/entrypoint.sh startfirstuse';
 
 const options = {
   key: privateKey,
@@ -43,6 +44,16 @@ function handleRequest(request, response){
     });
     response.end('OK\r\n');
     console.log('Set server as secondary');
+  }
+  else if(request.url == '/drbd-motion/initialize') 
+  {
+    exec(initializeCmd, function(error, stdout, stderr) {
+      console.log(error);
+      console.log(stdout);
+      console.log(stderr);
+    });
+    response.end('OK\r\n');
+    console.log('Initialization complete');
   }
   else {
     response.end('Unknown request Path: ' + request.url + ', From: ' + request.connection.remoteAddress);
