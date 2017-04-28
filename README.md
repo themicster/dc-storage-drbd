@@ -14,7 +14,7 @@ sudo mkdir /opt
 sudo dd if=/dev/zero of=/opt/dev0-backstore bs=1M count=1000
 
 sudo losetup /dev/fake-dev0 /opt/dev0-backstore
-sudo docker run --name drbd --rm -it --privileged --net=host --env-file=./server.env micster/drbd-motion-server
+sudo docker run --name drbd -d --privileged --net=host --env-file=./server.env micster/drbd-motion-server
 ```
 
 Slave:
