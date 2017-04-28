@@ -31,7 +31,7 @@ function handleRequest(request, response){
       console.log(stdout);
       console.log(stderr);
     });
-    response.end('OK');
+    response.end('OK\r\n');
     console.log('Set server as primary');
   }
   else if(request.url == '/drbd-motion/secondary') 
@@ -41,7 +41,7 @@ function handleRequest(request, response){
       console.log(stdout);
       console.log(stderr);
     });
-    response.end('OK');
+    response.end('OK\r\n');
     console.log('Set server as secondary');
   }
   else {
