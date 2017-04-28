@@ -1,6 +1,6 @@
 FROM geerd/drbd
 
-RUN apk add nodejs && mkdir -p /var/lib/node /src && openssl req \
+RUN apk update && apk add nodejs openssl && mkdir -p /var/lib/node /src && openssl req \
     -new \
     -newkey rsa:4096 \
     -days 365 \
