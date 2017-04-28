@@ -1,5 +1,5 @@
 # drbd-motion
-Data Center Storage using DRBD to migrate disks around your cluster
+Data Center Storage using DRBD to migrate disks around your cluster. I'm using this only on an internal network, do not expose the drbd-motion server to the outside world! If you're running on a shared network at a could provider, beware.
 
 Both Master and Slave:
 ```
@@ -14,15 +14,16 @@ sudo mkdir /opt
 sudo dd if=/dev/zero of=/opt/dev0-backstore bs=1M count=1000
 
 sudo losetup /dev/fake-dev0 /opt/dev0-backstore
-sudo docker run --name drbd -d --privileged --net=host --env-file=./server.env micster/drbd-motion-server
+sudo docker run --name drbd-motion -d --privileged --net=host --env-file=./server.env micster/drbd-motion-server
+mkfs -t ext4 /dev/drbd0
 ```
 
 Slave:
 ```
-sudo docker run --name drbd --rm -it --privileged --net=host -e masternode=sea2-cn7 -e node0=sea2-cn7 -e node1=sea2-cn6 -e datadevice=/dev/drbd0 -e datadisk1=/dev/ram0 -e nodeip0=10.1.2.7 -e nodeip1=10.1.2.6 -e drbdport=8877 geerd/drbd startfirstuse
+sudo docker run --name drbd-motion -d --privileged --net=host --env-file=./client.env micster/drbd-motion-server
+curl -k https://10.1.2.7:8445/drbd-motion/secondary
+curl -k https://10.1.2.6:8445/drbd-motion/primary
 sudo mkdir -p /var/data/drbd0
-sudo docker run --name drbd --rm -it --privileged --net=host -e masternode=sea2-cn7 -e node0=sea2-cn7 -e node1=sea2-cn6 -e datadevice=/dev/drbd0 -e datadisk1=/dev/ram0 -e nodeip0=10.1.2.7 -e nodeip1=10.1.2.6 -e drbdport=8877 --entrypoint=/bin/sh geerd/drbd -c "/root/configuredrbd.sh /etc/drbd.d/nfs_cluster.res && /sbin/drbdadm primary nfs_data"
+sudo mount -t ext4 /dev/drbd0 /var/data/drbd0
 
 ```
-
-/dev/drbd0 doesn't show up inside the container, but that is fine. Also before drbdadm can be run, you'll have to run entrypoint.sh with one of the commands to get it to create the proper /etc/drbd.d/nfs_cluster.res
