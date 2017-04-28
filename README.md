@@ -14,8 +14,7 @@ sudo mkdir /opt
 sudo dd if=/dev/zero of=/opt/dev0-backstore bs=1M count=1000
 
 sudo losetup /dev/fake-dev0 /opt/dev0-backstore
-sudo docker run --name drbd --rm -it --privileged --net=host -e masternode=sea2-cn7 -e node0=sea2-cn7 -e node1=sea2-cn6 -e datadevice=/dev/drbd0 -e datadisk1=/dev/fake-dev0 -e nodeip0=10.1.2.7 -e nodeip1=10.1.2.6 -e drbdport=8877 micster/drbd-motion-server
-sudo docker run --name drbd --rm -it --privileged --net=host -e masternode=sea2-cn7 -e node0=sea2-cn7 -e node1=sea2-cn6 -e datadevice=/dev/drbd0 -e datadisk1=/dev/ram0 -e nodeip0=10.1.2.7 -e nodeip1=10.1.2.6 -e drbdport=8877 --entrypoint=/bin/sh micster/drbd-motion-server -c "/root/configuredrbd.sh /etc/drbd.d/nfs_cluster.res && /sbin/drbdadm secondary nfs_data"
+sudo docker run --name drbd --rm -it --privileged --net=host --env-file=./server.env micster/drbd-motion-server
 ```
 
 Slave:
