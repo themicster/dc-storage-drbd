@@ -14,4 +14,4 @@ WORKDIR /src
 ADD webserver.js .
 
 EXPOSE 8445
-CMD ["node", "webserver.js"]
+ENTRYPOINT ["/usr/bin/node", "webserver.js"]
