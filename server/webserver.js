@@ -21,9 +21,14 @@ const PORT=8445;
 //We need a function which handles requests and send response
 function handleRequest(request, response){
   var now = new Date();
+  var reqData = undefined;
 
   console.log(now.toString() + ': Request for: ' + request.url + ', From: ' + request.connection.remoteAddress);
 
+  if(request.method == 'POST')
+  {
+    reqData = JSON.parse(request.postData);
+  }
   // TODO: Make this secure by requiring a token
   if(request.url == '/drbd-motion/primary') 
   {
@@ -44,6 +49,17 @@ function handleRequest(request, response){
     });
     response.end('OK\r\n');
     console.log('Set server as secondary');
+  }
+  else if(request.url == '/drbd-motion/createresource')
+  {
+    var fileData = "resource nfs_data {\r\n    on  sea2-cn7 {\r\n        device /dev/drbd0;\r\n        disk /dev/ram0;\r\n        address 10.1.2.7:7788;\r\n        meta-disk internal;\r\n    }";
+    fileData += "on sea2-cn6 {\r\n        device /dev/drbd0;\r\n        disk /dev/ram0;\r\n        address 10.1.2.6:8877;\r\n        meta-disk internal;\r\n    }\r\n}";
+    
+    fs.writeFileSync('/etc/drbd.d/' + reqData.ResourceName + '.res', fileData, function(err) {
+      if(err) {
+        return console.log(err);
+      }
+    });
   }
   else if(request.url == '/drbd-motion/initialize') 
   {
