@@ -25,10 +25,6 @@ function handleRequest(request, response){
 
   console.log(now.toString() + ': Request for: ' + request.url + ', From: ' + request.connection.remoteAddress);
 
-  if(request.method == 'POST')
-  {
-    reqData = JSON.parse(request.postData);
-  }
   // TODO: Make this secure by requiring a token
   if(request.url == '/drbd-motion/primary') 
   {
