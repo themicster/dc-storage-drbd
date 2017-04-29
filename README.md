@@ -13,7 +13,7 @@ sudo modprobe drbd
 sudo modprobe brd rd_size=1024000
 ```
 
-Initial Setup on master:
+Initial Setup on master (10.1.2.7):
 ```
 sudo mknod /dev/fake-dev0 b 7 200
 sudo mkdir /opt
@@ -22,16 +22,20 @@ sudo dd if=/dev/zero of=/opt/dev0-backstore bs=1M count=1000
 sudo losetup /dev/fake-dev0 /opt/dev0-backstore
 sudo docker run --name drbd-motion -d --privileged --net=host --env-file=./server.env micster/drbd-motion-server
 curl -k https://10.1.2.7:8445/drbd-motion/initialize
+sudo mkfs -t ext4 /dev/drbd0
 ```
+
+Run docker logs drbd-motion to see the output from the server. You'll notice there is an error on formatting the filesystem, so that's why we do it manually after the initialize.
 
 Master (if you've already run this as part of the initial setup, it's still running no need to run it again):
 ```
 sudo docker run --name drbd-motion -d --privileged --net=host --env-file=./server.env micster/drbd-motion-server
 ```
 
-Slave:
+Slave (10.1.2.6):
 ```
 sudo docker run --name drbd-motion -d --privileged --net=host --env-file=./client.env micster/drbd-motion-server
+curl -k https://10.1.2.6:8445/drbd-motion/initialize
 ```
 
 Mount the disk on the slave:
