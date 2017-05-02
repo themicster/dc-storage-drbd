@@ -9,6 +9,7 @@ var certificate = fs.readFileSync('/var/lib/node/drbd-motion.crt').toString();
 var primaryCmd = '/sbin/drbdadm primary nfs_data';
 var secondaryCmd = '/sbin/drbdadm secondary nfs_data';
 var initializeCmd = '/root/entrypoint.sh startfirstuse';
+var resourceList = new Array();
 
 const options = {
   key: privateKey,
@@ -21,8 +22,7 @@ const PORT=8445;
 //We need a function which handles requests and send response
 function handleRequest(request, response){
   var now = new Date();
-  var reqData = undefined;
-
+  
   console.log(now.toString() + ': Request for: ' + request.url + ', From: ' + request.connection.remoteAddress);
 
   // TODO: Make this secure by requiring a token
@@ -46,16 +46,28 @@ function handleRequest(request, response){
     response.end('OK\r\n');
     console.log('Set server as secondary');
   }
-  else if(request.url == '/drbd-motion/createresource')
+  else if(request.url.indexOf('/drbd-motion/create-link') == 0) // resource_name/master_name/slave_name/master_ip/slave_ip/device_name/disk_name
   {
-    var fileData = "resource nfs_data {\r\n    on  sea2-cn7 {\r\n        device /dev/drbd0;\r\n        disk /dev/ram0;\r\n        address 10.1.2.7:7788;\r\n        meta-disk internal;\r\n    }";
-    fileData += "on sea2-cn6 {\r\n        device /dev/drbd0;\r\n        disk /dev/ram0;\r\n        address 10.1.2.6:8877;\r\n        meta-disk internal;\r\n    }\r\n}";
-    
-    fs.writeFileSync('/etc/drbd.d/' + reqData.ResourceName + '.res', fileData, function(err) {
-      if(err) {
-        return console.log(err);
-      }
-    });
+    var urlData = request.url.split("/");
+    console.log("Parameter Count: " + urlData.length);
+    if(urlData.length == 10)
+    {
+      var reqData = {ResourceName: urlData[3], MasterName: urlData[4], SlaveName: urlData[5], 
+        MasterIP: urlData[6], SlaveIP: urlData[7], DeviceName: urlData[8], DiskName: urlData[9]};
+      console.log(reqData);
+
+      var fileData = "resource " + reqData.ResourceName + " {\r\n    on  " + reqData.MasterName + " {\r\n        device /dev/" + reqData.DeviceName + ";\r\n        disk /dev/" + reqData.DiskName + ";\r\n        address "+reqData.MasterIP+":7788;\r\n        meta-disk internal;\r\n    }\r\n";
+      fileData += "on "+reqData.SlaveName+" {\r\n        device /dev/"+reqData.DeviceName+";\r\n        disk /dev/"+reqData.DiskName+";\r\n        address "+reqData.SlaveIP+":8877;\r\n        meta-disk internal;\r\n    }\r\n}\r\n";
+      
+      console.log(fileData);
+
+      fs.writeFileSync('/etc/drbd.d/' + reqData.ResourceName + '.res', fileData);
+      response.end('OK');
+    }
+    else
+    {
+      response.end('Invalid number of parameters.');
+    }
   }
   else if(request.url == '/drbd-motion/initialize') 
   {
